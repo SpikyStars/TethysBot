@@ -1,0 +1,1 @@
+Simple Discord bot with some basic commands. Written in Java, using [JDA](https://github.com/DV8FromTheWorld/JDA).
