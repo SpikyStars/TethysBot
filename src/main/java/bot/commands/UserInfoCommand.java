@@ -4,31 +4,25 @@ import bot.BotMain;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
-public class UserInfoCommand extends Command{
-
-    public UserInfoCommand(){
-        infoShort = "Bring up info on a user";
-        info = "Brings up some information about a Discord user. More information is present if that user is in the server.";
-        usage = "userinfo <userid>";
-    }
+public class UserInfoCommand extends CommandBase {
 
     @Override
-    public void execute(MessageReceivedEvent event, String params) throws CommandException {
-        MessageChannel channel = event.getChannel();
+    public void execute(SlashCommandEvent event) throws CommandException {
         Guild guild = event.getGuild();
-        User author = event.getAuthor();
+        User author = event.getUser();
         try {
-            User user = BotMain.jda.retrieveUserById(params).complete();
+            OptionMapping userOption = event.getOption("userid");
+            User user = userOption != null ? BotMain.jda.retrieveUserById(userOption.getAsString()).complete() : author;
             EmbedBuilder embed = new EmbedBuilder();
             embed.setTitle(user.getAsTag());
             String avatar = user.getAvatarUrl();
@@ -43,7 +37,7 @@ public class UserInfoCommand extends Command{
                 embed.addField("Account joined", getTimestamp(member.getTimeJoined()), true);
             } catch (ErrorResponseException ignored){}
 
-            channel.sendMessage(embed.build()).queue();
+            event.replyEmbeds(embed.build()).queue();
         } catch (NumberFormatException e){
             throw new CommandException("Invalid ID!", "The ID provided is not a valid Discord ID.");
         } catch (ErrorResponseException e2){

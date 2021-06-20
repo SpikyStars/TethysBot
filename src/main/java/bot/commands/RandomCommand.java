@@ -1,38 +1,30 @@
 package bot.commands;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.MessageChannel;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 
-import java.util.Arrays;
+import java.util.Objects;
 
-public class RandomCommand extends Command{
+public class RandomCommand extends CommandBase {
     private static final int MIN_LIMIT = -50000;
     private static final int MAX_LIMIT = 50000;
     private static final int ROLL_LIMIT = 50;
 
-    public RandomCommand(){
-        infoShort = "Generate a random number";
-        info = "Generates a random integer within the range of the given minimum and maximum numbers (inclusive). You can optionally specify the number of times to roll; the default is 1.";
-        usage = "rand <min> <max> [times]";
-        example = "rand 1 6 2";
-    }
-
     @Override
-    public void execute(MessageReceivedEvent event, String params) throws CommandException {
-        MessageChannel channel = event.getChannel();
+    public void execute(SlashCommandEvent event){
         EmbedBuilder embed = new EmbedBuilder();
         try {
-            int[] args = Arrays.stream(params.split(" ")).mapToInt(Integer::parseInt).toArray();
-            int min = Math.max(args[0], MIN_LIMIT);
-            int max = Math.min(args[1], MAX_LIMIT);
-            int numTimes = args.length > 2 ? Math.min(args[2], ROLL_LIMIT) : 1;
-            embed.setTitle("Rolled " + numTimes + " time(s) in range " + min + " to " + max);
-            embed.setDescription(getRollsString(min, max, numTimes));
+            int min = Math.max(Integer.parseInt(Objects.requireNonNull(event.getOption("min")).getAsString()), MIN_LIMIT);
+            int max = Math.min(Integer.parseInt(Objects.requireNonNull(event.getOption("max")).getAsString()), MAX_LIMIT);
+            OptionMapping timesOption = event.getOption("times");
+            int times = timesOption != null ? Math.min(Integer.parseInt(timesOption.getAsString()), ROLL_LIMIT) : 1;
+            embed.setTitle("Rolled " + times + " time(s) in range " + min + " to " + max);
+            embed.setDescription(getRollsString(min, max, times));
+            event.replyEmbeds(embed.build()).queue();
         } catch (NumberFormatException e){
-            throw new CommandException("Incorrect format!", "The minimum, maximum, and range need to be integers.");
+            e.printStackTrace();
         }
-        channel.sendMessage(embed.build()).queue();
     }
 
     private String getRollsString(int min, int max, int numTimes){

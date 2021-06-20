@@ -1,19 +1,12 @@
 package bot.commands;
 
-import net.dv8tion.jda.api.entities.MessageChannel;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 
-public class PingCommand extends Command{
-    public PingCommand(){
-        infoShort = "Ping the bot";
-        info = "Pings the bot, returning the time it took for the bot to respond in milliseconds.";
-        usage = "ping";
-    }
+public class PingCommand extends CommandBase {
 
     @Override
-    public void execute(MessageReceivedEvent event, String params) {
-        MessageChannel channel = event.getChannel();
+    public void execute(SlashCommandEvent event) {
         long time = System.currentTimeMillis();
-        channel.sendMessage("Pong!").queue(response -> response.editMessageFormat("Pong! %dms", System.currentTimeMillis() - time).queue());
+        event.reply("Pong!").queue(response -> response.editOriginal("Pong! " + (System.currentTimeMillis() - time) + "ms").queue());
     }
 }
