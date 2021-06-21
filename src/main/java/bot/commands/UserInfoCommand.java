@@ -4,6 +4,7 @@ import bot.BotMain;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
@@ -34,6 +35,7 @@ public class UserInfoCommand extends CommandBase {
             EmbedBuilder embed = new EmbedBuilder();
             setAuthorDetails(embed, author);
             setUserDetails(embed, user, guild);
+            embed.setTimestamp(Instant.now());
             event.replyEmbeds(embed.build()).queue();
         } catch (NumberFormatException e){
             throw new CommandException("Invalid ID!", "The ID provided is not a valid Discord ID.");
@@ -43,19 +45,29 @@ public class UserInfoCommand extends CommandBase {
     }
 
     private void setAuthorDetails(EmbedBuilder embed, User author){
-        embed.setFooter("queried by "+ author.getAsTag());
+        embed.setFooter("queried by "+ author.getAsTag(), author.getEffectiveAvatarUrl());
     }
 
     private void setUserDetails(EmbedBuilder embed, User user, Guild guild){
         embed.setTitle(user.getAsTag());
-        String avatar = user.getAvatarUrl();
-        if (avatar == null) avatar = user.getDefaultAvatarUrl();
-        embed.setThumbnail(avatar);
+        embed.setThumbnail(user.getEffectiveAvatarUrl());
         embed.addField("Account created", getTimestamp(user.getTimeCreated()), true);
         try {
             Member member = guild.retrieveMember(user).complete();
             embed.setColor(member.getColor());
             embed.addField("Account joined", getTimestamp(member.getTimeJoined()), true);
+            OffsetDateTime boosted = member.getTimeBoosted();
+            if (boosted != null){
+                embed.addField("Boosting server since", getTimestamp(boosted), true);
+            }
+            StringBuilder sb = new StringBuilder();
+            for (Role r : member.getRoles()){
+                sb.append(r.getName());
+                sb.append(", ");
+            }
+            int length = sb.length();
+            sb.delete(length - 2, length - 1);
+            embed.addField("Roles", sb.toString(), true);
         } catch (ErrorResponseException ignored){}
     }
 
