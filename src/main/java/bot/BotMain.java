@@ -14,20 +14,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class BotMain {
-    public static final String DATE_FORMAT = "MM/dd/yyyy hh:mm:ss a";
-    public static final String TIMEZONE = "America/Los_Angeles";
-    public static final boolean IS_GLOBAL = false;
+    public static String dateFormat;
+    public static String timezone;
+    public static boolean isGlobal;
 
     public static Map<String, CommandBase> commands = new HashMap<>();
     public static JDA jda;
 
     public static void main(String[] args) {
         try {
+            loadConfig();
             BufferedReader reader = new BufferedReader(new FileReader("token.txt"));
             String token = reader.readLine();
             jda = JDABuilder.createDefault(token).addEventListeners(new DiscordListener()).build();
             jda.awaitReady();
-            if (IS_GLOBAL){
+            if (isGlobal){
                 registerCommands();
             } else {
                 registerCommandsLocal();
@@ -41,6 +42,12 @@ public class BotMain {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void loadConfig(){
+        dateFormat = "MM/dd/yyyy hh:mm:ss a";
+        timezone = "America/Los_Angeles";
+        isGlobal = false;
     }
 
     private static void registerCommands(){

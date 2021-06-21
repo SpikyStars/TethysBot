@@ -60,6 +60,6 @@ public class UserInfoCommand extends CommandBase {
     }
 
     private String getTimestamp(OffsetDateTime date){
-        return DateTimeFormatter.ofPattern(BotMain.DATE_FORMAT).format(date.withOffsetSameInstant(ZoneId.of(BotMain.TIMEZONE).getRules().getOffset(Instant.now())));
+        return DateTimeFormatter.ofPattern(BotMain.dateFormat).format(date.withOffsetSameInstant(ZoneId.of(BotMain.timezone).getRules().getOffset(Instant.now())));
     }
 }
