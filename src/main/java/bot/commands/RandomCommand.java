@@ -3,6 +3,8 @@ package bot.commands;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 
 import java.util.Objects;
 
@@ -10,6 +12,14 @@ public class RandomCommand extends CommandBase {
     private static final int MIN_LIMIT = -50000;
     private static final int MAX_LIMIT = 50000;
     private static final int ROLL_LIMIT = 50;
+
+    @Override
+    public CommandData createCommandData() {
+        return new CommandData("rand", "Generate a random number")
+                .addOption(OptionType.INTEGER, "min", "minimum number range", true)
+                .addOption(OptionType.INTEGER, "max", "maximum number range", true)
+                .addOption(OptionType.INTEGER, "times", "number of times to roll", false);
+    }
 
     @Override
     public void execute(SlashCommandEvent event){
