@@ -1,0 +1,7 @@
+{
+  "token": "[YOUR BOT TOKEN GOES HERE]",
+  "guild_id": "[YOUR GUILD ID GOES HERE (if you want commands guild-only)]",
+  "is_global": false,
+  "date_format": "MM/dd/yyyy hh:mm:ss a",
+  "timezone": "America/Los_Angeles"
+}

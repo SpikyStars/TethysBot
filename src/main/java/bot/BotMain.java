@@ -1,6 +1,9 @@
 package bot;
 
 import bot.commands.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -9,7 +12,6 @@ import javax.security.auth.login.LoginException;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,23 +22,24 @@ public class BotMain {
 
     public static Map<String, CommandBase> commands = new HashMap<>();
     public static JDA jda;
+    public static Gson gson = new GsonBuilder().setLenient().setPrettyPrinting().create();
 
     public static void main(String[] args) {
         try {
-            loadConfig();
-            BufferedReader reader = new BufferedReader(new FileReader("token.txt"));
-            String token = reader.readLine();
+            BufferedReader reader = new BufferedReader(new FileReader("config.json"));
+            JsonObject config = gson.fromJson(reader, JsonObject.class);
+            loadSettings(config);
+            String token = config.get("token").getAsString();
             jda = JDABuilder.createDefault(token).addEventListeners(new DiscordListener()).build();
             jda.awaitReady();
             if (isGlobal){
                 registerCommands();
             } else {
-                registerCommandsLocal();
+                String guildId = config.get("guild_id").getAsString();
+                registerCommandsLocal(guildId);
             }
         } catch (FileNotFoundException e){
-            System.err.println("File containing bot token not found - please create a token.txt containing the bot's token in the main directory");
-        } catch (IOException e){
-            System.err.println("Issue with reading from token.txt");
+            System.err.println("config.json not found - please create this file in the main directory");
         } catch (LoginException e){
             System.err.println("Issue logging into Discord");
         } catch (InterruptedException e) {
@@ -44,10 +47,10 @@ public class BotMain {
         }
     }
 
-    private static void loadConfig(){
-        dateFormat = "MM/dd/yyyy hh:mm:ss a";
-        timezone = "America/Los_Angeles";
-        isGlobal = false;
+    private static void loadSettings(JsonObject config){
+        dateFormat = config.get("date_format").getAsString();
+        timezone = config.get("timezone").getAsString();
+        isGlobal = config.get("is_global").getAsBoolean();
     }
 
     private static void registerCommands(){
@@ -56,19 +59,14 @@ public class BotMain {
         jda.retrieveCommands().queue(response -> System.out.println("Registered " + response.size() + " commands!"));
     }
 
-    private static void registerCommandsLocal() {
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader("guild_id.txt"));
-            Guild guild = jda.getGuildById(reader.readLine());
-            if (guild != null){
-                loadCommandMap();
-                commands.forEach((k, v) -> guild.upsertCommand(v.createCommandData()).queue());
-                guild.retrieveCommands().queue(response -> System.out.println("Registered " + response.size() + " commands!"));
-            } else {
-                System.err.println("A valid guild ID was not provided in guild_id.txt");
-            }
-        } catch (IOException e){
-            System.err.println("Issue with reading from guild_id.txt");
+    private static void registerCommandsLocal(String guildId) {
+        Guild guild = jda.getGuildById(guildId);
+        if (guild != null){
+            loadCommandMap();
+            commands.forEach((k, v) -> guild.upsertCommand(v.createCommandData()).queue());
+            guild.retrieveCommands().queue(response -> System.out.println("Registered " + response.size() + " commands!"));
+        } else {
+            System.err.println("A valid guild ID was not provided in the config");
         }
     }
 
